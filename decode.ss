@@ -1,3 +1,4 @@
+
 ; *********************************************
 ; *  314 Principles of Programming Languages  *
 ; *  Fall 2016                              *
@@ -12,7 +13,7 @@
 
 ;; contains a test-dictionary, which has a much smaller dictionary for testing
 ;; the dictionary is needed for spell checking
-(load "test-dictionary.ss")
+(load "dictionary.ss")
 
 ;; (load "dictionary.ss") ;; the real thing with 45,000 words
 
@@ -59,6 +60,59 @@
      (try_all p 25) (apply max (try_all p 25))))
     ))
 
+(define count_occ
+  (lambda (p n)
+    (if (not (eqv? n 0))
+        (/ (reduce + (map (lambda (y) (reduce + (map (lambda (x) (if (= (ctv x) n) (ctv x) 0) ) y) 0)) p) 0) n)
+        (/ (reduce + (map (lambda (y) (reduce + (map (lambda (x) (if (= (+ (ctv x) 10) (+ n 10)) (ctv x) 0) ) y) 0)) p) 0) 10))))
+
+
+(define try_all_occ
+  (lambda (p n)
+        (cons (count_occ p n) (if (> n 0)
+                                (try_all_occ p (- n 1))
+                                '()))))
+
+(define index_of_max_occ
+  (lambda (p)
+   (- 25 (index_of
+     (try_all_occ p 25) (apply max (try_all_occ p 25))))
+    ))
+
+(define shift_e
+  (lambda (x)
+    (+ (- 26 x) 4)
+    ))
+(define shift_t
+  (lambda (x)
+    (+ (- 26 x) 19)
+    ))
+(define shift_a
+  (lambda (x)
+    (+ (- 26 x) 0)
+    ))
+
+(define choose_num
+  (lambda (p)
+    (index_of
+     (list
+       (add_p (conv_num (conv_enc p (shift_e (index_of_max_occ p)))))
+       (add_p (conv_num (conv_enc p (shift_t (index_of_max_occ p)))))
+       (add_p (conv_num (conv_enc p (shift_a (index_of_max_occ p))))))
+     (apply max
+            (list
+             (add_p (conv_num (conv_enc p (shift_e (index_of_max_occ p)))))
+             (add_p (conv_num (conv_enc p (shift_t (index_of_max_occ p)))))
+             (add_p (conv_num (conv_enc p (shift_a (index_of_max_occ p))))))))))
+
+(define choose_offset
+  (lambda (p)
+    (if (= (choose_num p) 0)
+        (shift_e (index_of_max_occ p))
+        (if (= (choose_num p) 1)
+            (shift_t (index_of_max_occ p))
+            (if (= (choose_num p) 2)
+                (shift_a (index_of_max_occ p)))))))
 ;; -----------------------------------------------------
 ;; SPELL CHECKER FUNCTION
 
@@ -107,7 +161,6 @@
   (define decoder-n
     (lambda (n)
      (encode-n n)))
-   
     (decoder-n (index_of_max p)))) 
 
     
@@ -117,8 +170,10 @@
 ;;OUTPUT:same as above
 (define Gen-Decoder-B
   (lambda (p)
-    'SOME_CODE_GOES_HERE ;; *** FUNCTION BODY IS MISSING ***
-    ))
+    (define decoder-n
+      (lambda (n)
+        (encode-n n)))
+    (decoder-n (choose_offset p))))
 
 ;; -----------------------------------------------------
 ;; CODE-BREAKER FUNCTION
@@ -128,9 +183,11 @@
 ;;OUTPUT: a decoded document
 (define Code-Breaker
   (lambda (d decoder)
-    (
-     'SOME_CODE_GOES_HERE ;; *** FUNCTION BODY IS MISSING ***
-     )))
+    (map
+     (lambda (x)
+       (map decoder x)) d)
+    ))
+     
 
 ;; -----------------------------------------------------
 ;; EXAMPLE APPLICATIONS OF FUNCTIONS
