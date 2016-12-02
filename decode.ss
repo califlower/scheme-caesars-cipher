@@ -21,7 +21,43 @@
 ;; HELPER FUNCTIONS
 
 ;; *** CODE FOR ANY HELPER FUNCTION GOES HERE ***
+(define (converter x)
+  (or (and x 1) 0))
 
+(define conv_enc
+  (lambda (p n)
+    (map (encode-n n) p)))
+
+(define conv_num
+  (lambda (p)
+    (map (lambda (x)(converter (spell-checker x))) p)
+    ))
+
+(define add_p
+  (lambda (p)
+    (reduce + p 0)))
+
+(define combine
+  (lambda (p n)
+    (add_p (conv_num (conv_enc p n)))))
+
+(define try_all
+  (lambda (p n)
+        (cons (combine p n) (if (> n 0)
+                                (try_all p (- n 1))
+                                '()))))
+(define index_of
+  (lambda (l t)
+    (if (null? l) 0
+        (if (equal? t (car l))
+            0
+            (+ 1 (index_of (cdr l) t)) ))
+    ))
+(define index_of_max
+  (lambda (p)
+   (- 25 (index_of
+     (try_all p 25) (apply max (try_all p 25))))
+    ))
 
 ;; -----------------------------------------------------
 ;; SPELL CHECKER FUNCTION
@@ -43,7 +79,10 @@
 (define encode-n
   (lambda (n);;"n" is the distance, eg. n=3: a->d,b->e,...z->c
     (lambda (w);;"w" is the word to be encoded
-      (map vtc (map (lambda (y) (modulo y 26)) (map (lambda(x) (+ n x))(map ctv w))))
+      (map vtc
+           (map (lambda (y) (modulo y 26))
+                (map (lambda(x) (+ n x))
+                     (map ctv w))))
       )))
 
 ;;encode a document
@@ -51,7 +90,9 @@
 ;;OUTPUT: an encoded document using a provided encoder
 (define encode-d;;this encoder is supposed to be the output of "encode-n"
   (lambda (d encoder)
-    'SOME_CODE_GOES_HERE ;; *** FUNCTION BODY IS MISSING ***
+    (map
+     (lambda (x)
+       (map encoder x)) d)
     ))
     
 ;; -----------------------------------------------------
@@ -62,10 +103,15 @@
 ;;INPUT:an encoded paragraph "p"
 ;;OUTPUT:a decoder, whose input=a word, output=decoded word
 (define Gen-Decoder-A
-  (lambda (p)
-    'SOME_CODE_GOES_HERE ;; *** FUNCTION BODY IS MISSING ***
-    ))
+ (lambda (p)
+  (define decoder-n
+    (lambda (n)
+     (encode-n n)))
+   
+    (decoder-n (index_of_max p)))) 
 
+    
+    
 ;;generate a decoder using frequency analysis
 ;;INPUT:same as above
 ;;OUTPUT:same as above
